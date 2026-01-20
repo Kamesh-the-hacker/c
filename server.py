@@ -1,4 +1,5 @@
 import socket
+import sys
 
 HOST = "0.0.0.0"
 PORT = 54321
@@ -12,14 +13,20 @@ client, addr = server.accept()
 print("[+] Connected from", addr)
 
 while True:
-    cmd = input("remote@client$ ")
+    try:
+        cmd = raw_input("remote@client$ ")   # Python 2
+    except:
+        cmd = input("remote@client$ ")       # Python 3
 
     if cmd.lower() == "exit":
-        client.send(b"exit")
+        client.send(cmd.encode())
         break
 
     client.send(cmd.encode())
-    data = client.recv(16384)
+
+    data = client.recv(65535)
+    if not data:
+        break
 
     print(data.decode(errors="ignore"))
 
