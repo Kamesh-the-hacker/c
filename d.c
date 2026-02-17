@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define N 5   // Number of philosophers
+
+pthread_mutex_t forks[N];   // renamed from 'fork' to 'forks'
+
+void* philosopher(void* num) {
+    int id = *(int*)num;
+    int left = id;
+    int right = (id + 1) % N;
+
+    while (1) {
+        printf("Philosopher %d is thinking\n", id);
+        sleep(1);
+
+        // Deadlock prevention: even philosophers pick right first
+        if (id % 2 == 0) {
+            pthread_mutex_lock(&forks[right]);
+            pthread_mutex_lock(&forks[left]);
+        } else {
+            pthread_mutex_lock(&forks[left]);
+            pthread_mutex_lock(&forks[right]);
+        }
+
+        printf("Philosopher %d is eating\n", id);
+        sleep(2);
+
+        pthread_mutex_unlock(&forks[left]);
+        pthread_mutex_unlock(&forks[right]);
+
+        printf("Philosopher %d finished eating\n", id);
+    }
+}
+
+int main() {
+    pthread_t ph[N];
+    int id[N];
+    int i;
+
+    // Initialize mutexes
+    for (i = 0; i < N; i++)
+        pthread_mutex_init(&forks[i], NULL);
+
+    // Create threads
+    for (i = 0; i < N; i++) {
+        id[i] = i;
+        pthread_create(&ph[i], NULL, philosopher, &id[i]);
+    }
+
+    // Join threads
+    for (i = 0; i < N; i++)
+        pthread_join(ph[i], NULL);
+
+    return 0;
+}
